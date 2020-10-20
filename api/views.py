@@ -104,14 +104,14 @@ class UsernameView(viewsets.ModelViewSet):
 
 
 
-
-class CategoryViewSet(viewsets.ModelViewSet):
+class CategoryViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = [IsStaffOrAdmin | IsAuthenticatedOrReadOnly]
     filter_backends = [filters.SearchFilter]
     search_fields = ['name']
     lookup_field = 'slug'
+    
     def perform_create(self, serializer):
         slug = self.kwargs.get('slug')
         if self.queryset.filter(slug=slug):
@@ -120,9 +120,10 @@ class CategoryViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
     def destroy(self, request, slug=None):
-        del_genre = self.queryset.filter(slug=slug)
-        del_genre.delete()
+        del_category = self.queryset.filter(slug=slug)
+        del_category.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+    
 
 
 
@@ -142,7 +143,7 @@ class GenreViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, mixins.Destro
                 status=status.HTTP_400_BAD_REQUEST
             )
     def destroy(self, request, slug):
-        del_genre = filters.CharFilter(field_name='genre__slug')
+        del_genre = self.queryset.filter(slug=slug)
         del_genre.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
