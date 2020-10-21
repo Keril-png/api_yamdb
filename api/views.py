@@ -11,7 +11,7 @@ from rest_framework import viewsets, permissions, status, filters, mixins
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from .models import CustomUser
-from .permissions import IsStaffOrAdmin
+from .permissions import IsAdminOrReadOnly, IsStaffOrAdmin
 from .models import *
 from .serializers import *
 
@@ -102,56 +102,42 @@ class UsernameView(viewsets.ModelViewSet):
         return Response(serializer.errors,
                         status=status.HTTP_400_BAD_REQUEST)
 
+class CDLViewSet(
+    mixins.CreateModelMixin,
+    mixins.DestroyModelMixin,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet
+):
+    pass
 
-
-class CategoryViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
+class CategoryViewSet(CDLViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = [IsStaffOrAdmin | IsAuthenticatedOrReadOnly]
-    filter_backends = [filters.SearchFilter]
-    search_fields = ['name']
-    lookup_field = 'slug'
-    
-    def perform_create(self, serializer):
-        slug = self.kwargs.get('slug')
-        if self.queryset.filter(slug=slug):
-            return Response(
-                serializer.errors,
-                status=status.HTTP_400_BAD_REQUEST
-            )
-    def destroy(self, request, slug=None):
-        del_category = self.queryset.filter(slug=slug)
-        del_category.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-    
-
-
-
-class GenreViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet): 
-
-    queryset = Genre.objects.all()
-    serializer_class = GenreSerializer
-    permission_classes = [IsStaffOrAdmin | IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAdminOrReadOnly, ]
     filter_backends = [filters.SearchFilter]
     search_fields = ['=name']
     lookup_field = 'slug'
-    def perform_create(self, serializer):
-        slug = self.kwargs.get('slug')
-        if self.queryset.filter(slug=slug):
-            return Response(
-                serializer.errors,
-                status=status.HTTP_400_BAD_REQUEST
-            )
-    def destroy(self, request, slug):
-        del_genre = self.queryset.filter(slug=slug)
-        del_genre.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    
+
+
+
+class GenreViewSet(CDLViewSet): 
+
+    queryset = Genre.objects.all()
+    permission_classes = [IsAdminOrReadOnly, ]
+    serializer_class = GenreSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['=name']
+    lookup_field = 'slug'
+    
 
 
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
-    permission_classes = [IsStaffOrAdmin, ]
+    permission_classes = [IsAdminOrReadOnly]
+
 #    filter_backends = [DjangoFilterBackend]
 #    filterset_fields = ['category', 'genre', 'name', 'year']
 
