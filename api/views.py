@@ -14,7 +14,7 @@ from .models import CustomUser
 from .permissions import IsAdminOrReadOnly, IsStaffOrAdmin
 from .models import *
 from .serializers import *
-
+from rest_framework.pagination import PageNumberPagination
 
 
 class EmailValidView(APIView):
@@ -137,7 +137,9 @@ class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
     permission_classes = [IsAdminOrReadOnly]
-
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['=name', '=category', '=genre', '=year']
+    pagination_class = PageNumberPagination
 #    filter_backends = [DjangoFilterBackend]
 #    filterset_fields = ['category', 'genre', 'name', 'year']
 

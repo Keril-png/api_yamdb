@@ -28,6 +28,8 @@ class Genre(models.Model):
 class Category(models.Model):
     name = models.TextField()
     slug = models.SlugField(unique=True)
+    def __str__(self):
+        return self.name
 
 
 class Title(models.Model):

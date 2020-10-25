@@ -37,6 +37,16 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 class TitleSerializer(serializers.ModelSerializer):
+#    rating = serializers.DecimalField(read_only=True, max_digits=10,
+#                                      decimal_places=1, coerce_to_string=False)
+    category = serializers.SlugRelatedField( 
+        slug_field='slug', 
+        read_only=True,  
+    )
+    genre = category = serializers.SlugRelatedField( 
+        slug_field='slug', 
+        read_only=True,  
+    )
     class Meta:
         fields = '__all__'
         model = Title
