@@ -31,34 +31,48 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class GenreSerializer(serializers.ModelSerializer):
+
     class Meta:
+        lookup_field = 'slug'
         fields = ['name', 'slug']
         model = Genre
 
 
 class TitleSerializer(serializers.ModelSerializer):
-#    rating = serializers.DecimalField(read_only=True, max_digits=10,
-#                                      decimal_places=1, coerce_to_string=False)
-    category = serializers.SlugRelatedField( 
-        slug_field='slug', 
-        read_only=True,  
-    )
-    genre = category = serializers.SlugRelatedField( 
-        slug_field='slug', 
-        read_only=True,  
-    )
+    category = CategorySerializer(read_only=True, ) 
+    genre = GenreSerializer(read_only=True, many=True)
+
     class Meta:
-        fields = '__all__'
+        fields = ('id', 'name', 'year', 'description', 'genre', 'category')
+        model = Title
+
+
+class TitleEditSerializer(serializers.ModelSerializer):
+    category = serializers.SlugRelatedField(
+        queryset=Category.objects.all(),
+        slug_field='slug',
+        required=False,
+    )
+    genre = serializers.SlugRelatedField( 
+        queryset=Genre.objects.all(), 
+        slug_field='slug',
+        many=True 
+    )
+
+    class Meta:
+        fields = ('id', 'name', 'year', 'description', 'genre', 'category')
         model = Title
 
 
 class ReviewSerializer(serializers.ModelSerializer):
+
     class Meta:
         fields = ['id', 'title', 'author', 'text', 'score', 'pub_date']
         model = Review
 
 
 class CommentSerializer(serializers.ModelSerializer):
+    
     class Meta:
         fields = '__all__'
         model = Comment
