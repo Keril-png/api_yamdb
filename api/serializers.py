@@ -1,5 +1,5 @@
 from rest_framework import serializers
-
+from django.db.models import Avg
 from .models import *
 
 
@@ -39,12 +39,17 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 class TitleSerializer(serializers.ModelSerializer):
+    rating = serializers.SerializerMethodField()
     category = CategorySerializer(read_only=True, ) 
     genre = GenreSerializer(read_only=True, many=True)
 
     class Meta:
-        fields = ('id', 'name', 'year', 'description', 'genre', 'category')
+        fields = '__all__'
         model = Title
+
+    def get_rating(self, title):
+        avg = title.reviews.aggregate(Avg('score'))
+        return avg['score__avg']
 
 
 class TitleEditSerializer(serializers.ModelSerializer):
@@ -60,19 +65,23 @@ class TitleEditSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        fields = ('id', 'name', 'year', 'description', 'genre', 'category')
+        fields = '__all__'
         model = Title
 
 
 class ReviewSerializer(serializers.ModelSerializer):
+    title = serializers.SlugRelatedField(slug_field='pk', read_only='True')
+    author = serializers.SlugRelatedField(slug_field='username', read_only='True')
 
     class Meta:
-        fields = ['id', 'title', 'author', 'text', 'score', 'pub_date']
+        fields = '__all__'
         model = Review
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    
+    author = serializers.SlugRelatedField(slug_field='username', read_only=True)
+    review = serializers.SlugRelatedField(slug_field='pk', read_only=True)
+
     class Meta:
         fields = '__all__'
         model = Comment

@@ -1,5 +1,5 @@
 from django.shortcuts import render
-
+from rest_framework.generics import get_object_or_404
 import string
 import secrets
 from django.core.mail import send_mail
@@ -11,7 +11,7 @@ from rest_framework import viewsets, permissions, status, filters, mixins
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from .models import CustomUser
-from .permissions import IsAdminOrReadOnly, IsStaffOrAdmin
+from .permissions import *
 from .models import *
 from .serializers import *
 from rest_framework.pagination import PageNumberPagination
@@ -148,18 +148,42 @@ class TitleViewSet(viewsets.ModelViewSet):
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
-    queryset = Review.objects.all()
     serializer_class = ReviewSerializer
+    permission_classes = (IsAuthenticatedOrReadOnly, IsAuthorOrModeratorOrAdmin)
 
     def get_queryset(self):
-        """Filter comments by post"""
-        return self.queryset.filter(title_id=self.kwargs.get('title_id'))
+        title_id = self.kwargs.get('title_id')
+        title = get_object_or_404(Title, pk=title_id)
+        queryset = title.reviews.all()
+        return queryset
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        title_id = self.kwargs.get('title_id')
+        title = get_object_or_404(Title, pk=title_id)
+        if Review.objects.all().filter(title=title,
+                                       author=request.user).count() == 1:
+            headers = self.get_success_headers(serializer.validated_data)
+            return Response({'status': '400'}, status=400, headers=headers)
+        serializer.save(author=self.request.user, title=title)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=201, headers=headers)
 
 
 class CommentViewSet(viewsets.ModelViewSet):
-    queryset = Comment.objects.all()
     serializer_class = CommentSerializer
+    permission_classes = (IsAuthenticatedOrReadOnly, IsAuthorOrModeratorOrAdmin)
 
     def get_queryset(self):
-        """Filter comments by post"""
-        return self.queryset.filter(title_id=self.kwargs.get('title_id'), review_id=self.kwargs.get('review_id'))
+        title_id = self.kwargs.get('title_id')
+        review_id = self.kwargs.get('review_id')
+        review = get_object_or_404(Review, title__pk=title_id, pk=review_id)
+        queryset = review.comments.all()
+        return queryset
+
+    def perform_create(self, serializer):
+        title_id = self.kwargs.get('title_id')
+        review_id = self.kwargs.get('review_id')
+        review = get_object_or_404(Review, title__pk=title_id, pk=review_id)
+        serializer.save(author=self.request.user, review=review)
