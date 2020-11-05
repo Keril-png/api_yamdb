@@ -4,22 +4,20 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 
 
-#User = get_user_model()
+
+class UserRole(models.TextChoices):
+    USER = 'user'
+    MODERATOR = 'moderator'
+    ADMIN = 'admin'
 
 
 class CustomUser(AbstractUser):
-    roles = (
-        ('user', 'user'),
-        ('moderator', 'moderator '),
-        ('admin', 'admin '),
-        ('django_adm', 'django_adm'),
-        ('AnonymousUser', 'AnonymousUser')
+    role = models.CharField(
+        max_length=20,
+        choices=UserRole.choices,
+        default=UserRole.USER
     )
     bio = models.TextField(max_length=500, blank=True)
-    role = models.CharField(max_length=500, choices=roles, default='user')
-    confirmation_code = models.CharField(max_length=10, blank=True)
-    token = models.CharField(max_length=30, blank=True)
-    username = models.CharField(max_length=30, unique=True)
     email = models.EmailField(unique=True)
 
 

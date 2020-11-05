@@ -3,25 +3,30 @@ from django.db.models import Avg
 from .models import *
 
 
-class EmailSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        fields = ('email',)
-        model = CustomUser
-
-
 class CustomUserSerializer(serializers.ModelSerializer):
 
     class Meta:
-        fields = (
-            'first_name',
-            'last_name',
-            'username',
-            'bio',
-            'email',
-            'role'
-        )
         model = CustomUser
+        fields = (
+            "first_name",
+            "last_name",
+            "username",
+            "bio",
+            "email",
+            "role"
+        )
+
+
+class UserCreationSerializer(serializers.Serializer):
+
+    email = serializers.EmailField(required=True)
+    username = serializers.CharField(max_length=200)
+    
+        
+class LoggingUserSerializer(serializers.Serializer):
+    
+    email = serializers.EmailField(required=True)
+    confirmation_code = serializers.CharField(max_length=200)
 
 
 class CategorySerializer(serializers.ModelSerializer):
