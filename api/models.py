@@ -74,12 +74,12 @@ class Review(models.Model):
     )
     pub_date = models.DateTimeField('Дата и время', auto_now_add=True)
 
-    def __str__(self):
-        return self.pk
-
     class Meta:
         ordering = ['-pub_date']
         unique_together = ['title', 'author']
+
+    def __str__(self):
+        return self.text
 
 
 class Comment(models.Model):
