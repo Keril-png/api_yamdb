@@ -2,3 +2,6 @@ pytest-django
 requests
 django
 djangorestframework
+djangorestframework-simplejwt
+djangorestframework-jwt
+django-filter
