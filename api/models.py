@@ -4,7 +4,6 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 
 
-
 class UserRole(models.TextChoices):
     USER = 'user'
     MODERATOR = 'moderator'
