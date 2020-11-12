@@ -6,7 +6,7 @@ from django.core.mail import send_mail
 from rest_framework.response import Response
 from rest_framework_jwt.settings import api_settings
 from rest_framework.views import APIView
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from rest_framework import viewsets, permissions, status, filters, mixins
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
@@ -17,7 +17,7 @@ from .serializers import *
 from rest_framework.pagination import PageNumberPagination
 from django_filters.rest_framework import DjangoFilterBackend
 from .api_filters import *
-from rest_framework.permissions import IsAuthenticated, AllowAny    
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.tokens import default_token_generator
 from django.shortcuts import get_object_or_404
@@ -33,7 +33,8 @@ def get_tokens_for_user(user):
 
 
 class SendConfirmationCodeView(APIView):
-    permission_classes = (AllowAny,)    
+    permission_classes = (AllowAny,)
+
     def post(self, request):
         serializer = UserCreationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -45,7 +46,7 @@ class SendConfirmationCodeView(APIView):
         )
         confirmation_code = default_token_generator.make_token(user)
         send_mail_to_user(email, confirmation_code)
-        return Response({"email": email})         
+        return Response({"email": email})
 
 
 class GetTokenAPIView(APIView):
@@ -88,7 +89,6 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-
 class CDLViewSet(
     mixins.CreateModelMixin,
     mixins.DestroyModelMixin,
@@ -107,8 +107,8 @@ class CategoryViewSet(CDLViewSet):
     search_fields = ['=name']
     lookup_field = 'slug'
 
-    
-class GenreViewSet(CDLViewSet): 
+
+class GenreViewSet(CDLViewSet):
 
     queryset = Genre.objects.all()
     permission_classes = [IsAdminOrReadOnly, ]
@@ -117,14 +117,14 @@ class GenreViewSet(CDLViewSet):
     filter_backends = [filters.SearchFilter]
     search_fields = ['=name']
     lookup_field = 'slug'
-    
+
 
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     filterset_class = TitleFilter
     permission_classes = [IsAdminOrReadOnly]
     pagination_class = PageNumberPagination
-    
+
     def get_serializer_class(self):
         if self.request.method == 'GET':
             return TitleSerializer
@@ -138,21 +138,12 @@ class ReviewViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         title_id = self.kwargs.get('title_id')
         title = get_object_or_404(Title, pk=title_id)
-        queryset = title.reviews.all()
-        return queryset
+        return title.reviews.all()
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+    def perform_create(self, serializer):
         title_id = self.kwargs.get('title_id')
         title = get_object_or_404(Title, pk=title_id)
-        if Review.objects.all().filter(title=title,
-                                       author=request.user).count() == 1:
-            headers = self.get_success_headers(serializer.validated_data)
-            return Response({'status': '400'}, status=400, headers=headers)
         serializer.save(author=self.request.user, title=title)
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=201, headers=headers)
 
 
 class CommentViewSet(viewsets.ModelViewSet):

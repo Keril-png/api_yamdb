@@ -18,34 +18,31 @@ class CustomUserSerializer(serializers.ModelSerializer):
 
 
 class UserCreationSerializer(serializers.Serializer):
-
     email = serializers.EmailField(required=True)
     username = serializers.CharField(max_length=200)
-    
-        
+
+
 class LoggingUserSerializer(serializers.Serializer):
-    
     email = serializers.EmailField(required=True)
     confirmation_code = serializers.CharField(max_length=200)
 
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
-        fields = ['name', 'slug']
+        exclude = ['id', ]
         model = Category
 
 
 class GenreSerializer(serializers.ModelSerializer):
-
     class Meta:
         lookup_field = 'slug'
-        fields = ['name', 'slug']
+        exclude = ['id', ]
         model = Genre
 
 
 class TitleSerializer(serializers.ModelSerializer):
     rating = serializers.SerializerMethodField()
-    category = CategorySerializer(read_only=True, ) 
+    category = CategorySerializer(read_only=True, )
     genre = GenreSerializer(read_only=True, many=True)
 
     class Meta:
@@ -63,10 +60,10 @@ class TitleEditSerializer(serializers.ModelSerializer):
         slug_field='slug',
         required=False,
     )
-    genre = serializers.SlugRelatedField( 
-        queryset=Genre.objects.all(), 
+    genre = serializers.SlugRelatedField(
+        queryset=Genre.objects.all(),
         slug_field='slug',
-        many=True 
+        many=True
     )
 
     class Meta:
@@ -78,6 +75,13 @@ class ReviewSerializer(serializers.ModelSerializer):
     title = serializers.SlugRelatedField(slug_field='pk', read_only='True')
     author = serializers.SlugRelatedField(slug_field='username', read_only='True')
 
+    def validate(self, data):
+        author = self.context["request"].user.id,
+        title = self.context["view"].kwargs.get("title_id")
+        if not self.instance and Review.objects.filter(title=title, author=author).exists():
+            raise serializers.ValidationError('Review already exists')
+        return data
+    
     class Meta:
         fields = '__all__'
         model = Review
