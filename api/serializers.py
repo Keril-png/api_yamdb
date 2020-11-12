@@ -75,6 +75,13 @@ class ReviewSerializer(serializers.ModelSerializer):
     title = serializers.SlugRelatedField(slug_field='pk', read_only='True')
     author = serializers.SlugRelatedField(slug_field='username', read_only='True')
 
+    def validate(self, data):
+        author = self.context["request"].user.id,
+        title = self.context["view"].kwargs.get("title_id")
+        if not self.instance and Review.objects.filter(title=title, author=author).exists():
+            raise serializers.ValidationError('Review already exists')
+        return data
+    
     class Meta:
         fields = '__all__'
         model = Review
