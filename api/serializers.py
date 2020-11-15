@@ -8,12 +8,12 @@ class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = (
-            "first_name",
-            "last_name",
-            "username",
-            "bio",
-            "email",
-            "role"
+            'first_name',
+            'last_name',
+            'username',
+            'bio',
+            'email',
+            'role'
         )
 
 
@@ -76,8 +76,8 @@ class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(slug_field='username', read_only='True')
 
     def validate(self, data):
-        author = self.context["request"].user.id,
-        title = self.context["view"].kwargs.get("title_id")
+        author = self.context['request'].user.id,
+        title = self.context['view'].kwargs.get('title_id')
         if not self.instance and Review.objects.filter(title=title, author=author).exists():
             raise serializers.ValidationError('Review already exists')
         return data
