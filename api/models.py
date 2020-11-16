@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
+from datetime import date
 
 
 class UserRole(models.TextChoices):
@@ -38,7 +39,8 @@ class Category(models.Model):
 
 class Title(models.Model):
     name = models.CharField(max_length=200, blank=False)
-    year = models.PositiveIntegerField()
+    year = models.PositiveIntegerField(db_index=True, validators=[
+                                       MaxValueValidator(date.today().year)])
     description = models.TextField(null=True, blank=True)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL,
                                  related_name='titles', blank=True, null=True)
@@ -46,9 +48,6 @@ class Title(models.Model):
 
 
 class Review(models.Model):
-    class Meta:
-        ordering = ['-pub_date']
-        unique_together = ['title', 'author']
 
     title = models.ForeignKey(
         Title,
@@ -72,13 +71,15 @@ class Review(models.Model):
     )
     pub_date = models.DateTimeField('Дата и время публикации', auto_now_add=True, db_index=True)
 
+    class Meta:
+        ordering = ['-pub_date']
+        unique_together = ['title', 'author']
+
     def __str__(self):
         return self.text
 
 
 class Comment(models.Model):
-    class Meta:
-        ordering = ['-pub_date']
 
     review = models.ForeignKey(Review, on_delete=models.CASCADE,
                                related_name='comments', verbose_name='Оценка')
@@ -86,3 +87,6 @@ class Comment(models.Model):
                                related_name='comments', verbose_name='Автор')
     text = models.TextField('Комментарий к оценке')
     pub_date = models.DateTimeField('Дата и время публикации', auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ['-pub_date']
