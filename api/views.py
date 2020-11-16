@@ -1,26 +1,26 @@
-import string
 import secrets
-from django.shortcuts import render
-from rest_framework.generics import get_object_or_404
-from django.core.mail import send_mail
-from rest_framework.response import Response
-from rest_framework_jwt.settings import api_settings
-from rest_framework.views import APIView
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
-from rest_framework import viewsets, permissions, status, filters, mixins
-from rest_framework.decorators import action, api_view, permission_classes
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
-from .models import CustomUser
-from .permissions import *
-from .models import *
-from .serializers import *
-from rest_framework.pagination import PageNumberPagination
-from django_filters.rest_framework import DjangoFilterBackend
-from .api_filters import *
-from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework_simplejwt.tokens import RefreshToken
+import string
+
 from django.contrib.auth.tokens import default_token_generator
-from django.shortcuts import get_object_or_404
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.core.mail import send_mail
+from django.shortcuts import get_object_or_404, render
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, mixins, permissions, status, viewsets
+from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.generics import get_object_or_404
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import (AllowAny, IsAuthenticated,
+                                        IsAuthenticatedOrReadOnly)
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework_jwt.settings import api_settings
+from rest_framework_simplejwt.tokens import RefreshToken
+
+from .api_filters import *
+from .models import *
+from .permissions import *
+from .serializers import *
 
 
 def get_tokens_for_user(user):
