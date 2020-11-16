@@ -1,5 +1,6 @@
-from rest_framework import serializers
 from django.db.models import Avg
+from rest_framework import permissions, serializers
+
 from .models import *
 
 
@@ -76,12 +77,18 @@ class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(slug_field='username', read_only='True')
 
     def validate(self, data):
-        author = self.context["request"].user.id,
+        method = self.context["request"].method
+        if method in permissions.SAFE_METHODS + ('PATCH',):
+            return data
+
+        author = self.context["request"].user
         title = self.context["view"].kwargs.get("title_id")
-        if not self.instance and Review.objects.filter(title=title, author=author).exists():
+
+        if Review.objects.filter(title=title, author=author).exists():
             raise serializers.ValidationError('Review already exists')
-        return data
-    
+        else:
+            return data
+
     class Meta:
         fields = '__all__'
         model = Review
