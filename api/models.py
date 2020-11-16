@@ -21,6 +21,14 @@ class CustomUser(AbstractUser):
     bio = models.TextField(max_length=500, blank=True)
     email = models.EmailField(unique=True)
 
+    @property
+    def is_admin(self):
+        return self.role in ['djnago_adm', UserRole.ADMIN] or self.is_staff
+
+    @property
+    def is_moderator(self):
+        return self.role == UserRole.MODERATOR
+
 
 class Genre(models.Model):
     name = models.CharField(max_length=200)
