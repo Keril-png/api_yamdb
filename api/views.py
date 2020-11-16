@@ -38,14 +38,14 @@ class SendConfirmationCodeView(APIView):
     def post(self, request):
         serializer = UserCreationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        email = request.data.get('email')
-        username = request.data.get('username')
+        email = serializer.data['email'] #request.data.get('email')
+        username = serializer.data['username']
         user, created = CustomUser.objects.get_or_create(
             email=email,
             username=username
         )
         confirmation_code = default_token_generator.make_token(user)
-        send_mail_to_user(email, confirmation_code)
+        send_mail(email, confirmation_code)
         return Response({'email': email})
 
 
