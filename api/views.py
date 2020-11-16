@@ -1,7 +1,7 @@
-from django.shortcuts import render
-from rest_framework.generics import get_object_or_404
 import string
 import secrets
+from django.shortcuts import render
+from rest_framework.generics import get_object_or_404
 from django.core.mail import send_mail
 from rest_framework.response import Response
 from rest_framework_jwt.settings import api_settings
@@ -38,15 +38,15 @@ class SendConfirmationCodeView(APIView):
     def post(self, request):
         serializer = UserCreationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        email = request.data.get("email")
-        username = request.data.get("username")
+        email = request.data.get('email')
+        username = request.data.get('username')
         user, created = CustomUser.objects.get_or_create(
             email=email,
             username=username
         )
         confirmation_code = default_token_generator.make_token(user)
         send_mail_to_user(email, confirmation_code)
-        return Response({"email": email})
+        return Response({'email': email})
 
 
 class GetTokenAPIView(APIView):
@@ -60,8 +60,8 @@ class GetTokenAPIView(APIView):
         confirmation_code = request.data.get('confirmation_code')
         if default_token_generator.check_token(user) == confirmation_code:
             token = get_tokens_for_user(user)
-            return Response({"token": token['access']})
-        return Response({"message": "неверный код подтверждения."})
+            return Response({'token': token['access']})
+        return Response({'message': 'неверный код подтверждения.'})
 
 
 class UserViewSet(viewsets.ModelViewSet):
