@@ -38,7 +38,7 @@ class SendConfirmationCodeView(APIView):
     def post(self, request):
         serializer = UserCreationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        email = serializer.data['email'] #request.data.get('email')
+        email = serializer.data['email']
         username = serializer.data['username']
         user, created = CustomUser.objects.get_or_create(
             email=email,
@@ -46,7 +46,7 @@ class SendConfirmationCodeView(APIView):
         )
         confirmation_code = default_token_generator.make_token(user)
         send_mail(email, confirmation_code)
-        return Response({'email': email})
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class GetTokenAPIView(APIView):
@@ -58,10 +58,10 @@ class GetTokenAPIView(APIView):
         email = request.data.get('email')
         user = get_object_or_404(CustomUser, email=email)
         confirmation_code = request.data.get('confirmation_code')
-        if default_token_generator.check_token(user) == confirmation_code:
+        if default_token_generator.check_token(user, confirmation_code):
             token = get_tokens_for_user(user)
-            return Response({'token': token['access']})
-        return Response({'message': 'неверный код подтверждения.'})
+            return Response({'token': token['access']}, status=status.HTTP_200_OK)
+        return Response(serializer.data, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -77,16 +77,14 @@ class UserViewSet(viewsets.ModelViewSet):
         permission_classes=[IsAuthenticated]
     )
     def me(self, request):
-        user = request.user
         if request.method == 'GET':
-            serializer = self.get_serializer(user)
+            serializer = CustomUserSerializer(request.user)
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
-            serializer = CustomUserSerializer(user, data=request.data, partial=True)
-            if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            serializer = CustomUserSerializer(request.user, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class CDLViewSet(
