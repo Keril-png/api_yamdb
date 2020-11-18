@@ -15,21 +15,12 @@ from rest_framework.permissions import (AllowAny, IsAuthenticated,
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_jwt.settings import api_settings
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 
 from .api_filters import *
 from .models import *
 from .permissions import *
 from .serializers import *
-
-
-def get_tokens_for_user(user):
-    refresh = RefreshToken.for_user(user)
-
-    return {
-        'refresh': str(refresh),
-        'access': str(refresh.access_token),
-    }
 
 
 class SendConfirmationCodeView(APIView):
@@ -55,12 +46,12 @@ class GetTokenAPIView(APIView):
     def post(self, request):
         serializer = LoggingUserSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        email = request.data.get('email')
+        email = serializer.data['email']
+        confirmation_code = email = serializer.data['confirmation_code']
         user = get_object_or_404(CustomUser, email=email)
-        confirmation_code = request.data.get('confirmation_code')
         if default_token_generator.check_token(user, confirmation_code):
-            token = get_tokens_for_user(user)
-            return Response({'token': token['access']}, status=status.HTTP_200_OK)
+            token = AccessToken.for_user(user)
+            return Response({'token': token}, status=status.HTTP_200_OK)
         return Response(serializer.data, status=status.HTTP_400_BAD_REQUEST)
 
 
