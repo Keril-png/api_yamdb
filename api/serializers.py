@@ -78,7 +78,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         method = self.context["request"].method
-        if method in permissions.SAFE_METHODS + ('PATCH',):
+        if method != 'POST':
             return data
 
         author = self.context["request"].user
@@ -86,8 +86,8 @@ class ReviewSerializer(serializers.ModelSerializer):
 
         if Review.objects.filter(title=title, author=author).exists():
             raise serializers.ValidationError('Review already exists')
-        else:
-            return data
+
+        return data
 
     class Meta:
         fields = '__all__'

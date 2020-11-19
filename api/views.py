@@ -71,11 +71,11 @@ class UserViewSet(viewsets.ModelViewSet):
         if request.method == 'GET':
             serializer = CustomUserSerializer(request.user)
             return Response(serializer.data, status=status.HTTP_200_OK)
-        else:
-            serializer = CustomUserSerializer(request.user, data=request.data, partial=True)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        serializer = CustomUserSerializer(request.user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class CDLViewSet(
