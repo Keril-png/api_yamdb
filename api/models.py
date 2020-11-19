@@ -23,7 +23,7 @@ class CustomUser(AbstractUser):
 
     @property
     def is_admin(self):
-        return self.role in ['djnago_adm', UserRole.ADMIN] or self.is_staff
+        return self.role == UserRole.ADMIN or self.is_superuser or self.is_staff
 
     @property
     def is_moderator(self):
